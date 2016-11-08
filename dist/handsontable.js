@@ -4470,7 +4470,7 @@ var domHelpers = ($__helpers_47_dom_47_element__ = _dereq_("helpers/dom/element"
 var domEventHelpers = ($__helpers_47_dom_47_event__ = _dereq_("helpers/dom/event"), $__helpers_47_dom_47_event__ && $__helpers_47_dom_47_event__.__esModule && $__helpers_47_dom_47_event__ || {default: $__helpers_47_dom_47_event__});
 var HELPERS = [arrayHelpers, browserHelpers, dataHelpers, dateHelpers, featureHelpers, functionHelpers, mixedHelpers, numberHelpers, objectHelpers, settingHelpers, stringHelpers, unicodeHelpers];
 var DOM = [domHelpers, domEventHelpers];
-Handsontable.buildDate = 'Tue Nov 08 2016 12:39:38 GMT+0100 (CET)';
+Handsontable.buildDate = 'Tue Nov 08 2016 14:35:36 GMT-0700 (Mountain Standard Time)';
 Handsontable.packageName = 'handsontable';
 Handsontable.version = '0.29.0';
 var baseVersion = '@@baseVersion';
@@ -10582,7 +10582,11 @@ function getStyle(element, prop) {
   }
 }
 function getComputedStyle(element) {
-  return element.currentStyle || document.defaultView.getComputedStyle(element);
+  if (document.defaultView.getComputedStyle !== '' && document.defaultView.getComputedStyle !== void 0) {
+    return document.defaultView.getComputedStyle(element);
+  } else {
+    return element.currentStyle;
+  }
 }
 function outerWidth(element) {
   return element.offsetWidth;
@@ -14254,7 +14258,153 @@ var $Comments = Comments;
 registerPlugin('comments', Comments);
 
 //# 
-},{"3rdparty/walkontable/src/cell/coords":5,"_base":61,"browser":23,"commentEditor":66,"contextMenu/utils":86,"eventManager":41,"helpers/dom/element":46,"helpers/function":49,"helpers/object":52,"plugins":60}],68:[function(_dereq_,module,exports){
+},{"3rdparty/walkontable/src/cell/coords":5,"_base":61,"browser":23,"commentEditor":66,"contextMenu/utils":87,"eventManager":41,"helpers/dom/element":46,"helpers/function":49,"helpers/object":52,"plugins":60}],68:[function(_dereq_,module,exports){
+"use strict";
+Object.defineProperties(exports, {
+  ContextMenuCopyPaste: {get: function() {
+      return ContextMenuCopyPaste;
+    }},
+  __esModule: {value: true}
+});
+var $___46__46__47__95_base__,
+    $__zeroclipboard__,
+    $___46__46__47__46__46__47_helpers_47_dom_47_element__,
+    $___46__46__47__46__46__47_helpers_47_array__,
+    $___46__46__47__46__46__47_eventManager__,
+    $___46__46__47__46__46__47_plugins__,
+    $___46__46__47_contextMenu_47_predefinedItems__;
+var BasePlugin = ($___46__46__47__95_base__ = _dereq_("_base"), $___46__46__47__95_base__ && $___46__46__47__95_base__.__esModule && $___46__46__47__95_base__ || {default: $___46__46__47__95_base__}).default;
+var ZeroClipboard = ($__zeroclipboard__ = _dereq_("zeroclipboard"), $__zeroclipboard__ && $__zeroclipboard__.__esModule && $__zeroclipboard__ || {default: $__zeroclipboard__}).default;
+var removeClass = ($___46__46__47__46__46__47_helpers_47_dom_47_element__ = _dereq_("helpers/dom/element"), $___46__46__47__46__46__47_helpers_47_dom_47_element__ && $___46__46__47__46__46__47_helpers_47_dom_47_element__.__esModule && $___46__46__47__46__46__47_helpers_47_dom_47_element__ || {default: $___46__46__47__46__46__47_helpers_47_dom_47_element__}).removeClass;
+var arrayEach = ($___46__46__47__46__46__47_helpers_47_array__ = _dereq_("helpers/array"), $___46__46__47__46__46__47_helpers_47_array__ && $___46__46__47__46__46__47_helpers_47_array__.__esModule && $___46__46__47__46__46__47_helpers_47_array__ || {default: $___46__46__47__46__46__47_helpers_47_array__}).arrayEach;
+var EventManager = ($___46__46__47__46__46__47_eventManager__ = _dereq_("eventManager"), $___46__46__47__46__46__47_eventManager__ && $___46__46__47__46__46__47_eventManager__.__esModule && $___46__46__47__46__46__47_eventManager__ || {default: $___46__46__47__46__46__47_eventManager__}).EventManager;
+var registerPlugin = ($___46__46__47__46__46__47_plugins__ = _dereq_("plugins"), $___46__46__47__46__46__47_plugins__ && $___46__46__47__46__46__47_plugins__.__esModule && $___46__46__47__46__46__47_plugins__ || {default: $___46__46__47__46__46__47_plugins__}).registerPlugin;
+var SEPARATOR = ($___46__46__47_contextMenu_47_predefinedItems__ = _dereq_("contextMenu/predefinedItems"), $___46__46__47_contextMenu_47_predefinedItems__ && $___46__46__47_contextMenu_47_predefinedItems__.__esModule && $___46__46__47_contextMenu_47_predefinedItems__ || {default: $___46__46__47_contextMenu_47_predefinedItems__}).SEPARATOR;
+var ContextMenuCopyPaste = function ContextMenuCopyPaste(hotInstance) {
+  $traceurRuntime.superConstructor($ContextMenuCopyPaste).call(this, hotInstance);
+  this.eventManager = new EventManager(this);
+  this.swfPath = null;
+  this.outsideClickDeselectsCache = null;
+};
+var $ContextMenuCopyPaste = ContextMenuCopyPaste;
+($traceurRuntime.createClass)(ContextMenuCopyPaste, {
+  isEnabled: function() {
+    return this.hot.getSettings().contextMenuCopyPaste;
+  },
+  enablePlugin: function() {
+    var $__7 = this;
+    if (this.enabled) {
+      return;
+    }
+    if (typeof this.hot.getSettings().contextMenuCopyPaste === 'object') {
+      this.swfPath = this.hot.getSettings().contextMenuCopyPaste.swfPath;
+    }
+    if (typeof ZeroClipboard === 'undefined') {
+      console.error('To be able to use the Copy/Paste feature from the context menu, you need to manually include ZeroClipboard.js file to your website.');
+    }
+    try {
+      new ActiveXObject('ShockwaveFlash.ShockwaveFlash');
+    } catch (exception) {
+      if (typeof navigator.mimeTypes['application/x-shockwave-flash'] == 'undefined') {
+        console.error('To be able to use the Copy/Paste feature from the context menu, your browser needs to have Flash Plugin installed.');
+      }
+    }
+    if (this.swfPath) {
+      ZeroClipboard.config({swfPath: this.swfPath});
+    }
+    this.hot.addHook('afterContextMenuShow', (function() {
+      return $__7.onAfterContextMenuShow();
+    }));
+    this.hot.addHook('afterContextMenuDefaultOptions', (function(options) {
+      return $__7.onAfterContextMenuDefaultOptions(options);
+    }));
+    this.registerEvents();
+    $traceurRuntime.superGet(this, $ContextMenuCopyPaste.prototype, "enablePlugin").call(this);
+  },
+  disablePlugin: function() {
+    $traceurRuntime.superGet(this, $ContextMenuCopyPaste.prototype, "disablePlugin").call(this);
+  },
+  registerEvents: function() {
+    var $__7 = this;
+    this.eventManager.addEventListener(document, 'mouseenter', (function() {
+      return $__7.removeCurrentClass();
+    }));
+    this.eventManager.addEventListener(document, 'mouseleave', (function() {
+      return $__7.removeZeroClipboardClass();
+    }));
+  },
+  getCopyValue: function() {
+    this.hot.copyPaste.setCopyableText();
+    return this.hot.copyPaste.copyPasteInstance.elTextarea.value;
+  },
+  onAfterContextMenuDefaultOptions: function(defaultOptions) {
+    defaultOptions.items.unshift({
+      key: 'copy',
+      name: 'Copy',
+      disabled: function() {
+        return this.selection.selectedHeader.corner;
+      }
+    }, {
+      key: 'paste',
+      name: 'Paste',
+      callback: function() {
+        this.copyPaste.triggerPaste();
+      },
+      disabled: function() {
+        return this.selection.selectedHeader.corner;
+      }
+    }, {name: SEPARATOR});
+  },
+  onAfterContextMenuShow: function() {
+    var $__7 = this;
+    var contextMenu = this.hot.getPlugin('contextMenu');
+    var data = contextMenu.menu.hotMenu.getSourceData();
+    arrayEach(data, (function(item, index) {
+      if (item.key === 'copy') {
+        var zeroClipboardInstance = new ZeroClipboard(contextMenu.menu.hotMenu.getCell(index, 0));
+        zeroClipboardInstance.off();
+        zeroClipboardInstance.on('copy', (function(event) {
+          var clipboard = event.clipboardData;
+          clipboard.setData('text/plain', $__7.getCopyValue());
+          $__7.hot.getSettings().outsideClickDeselects = $__7.outsideClickDeselectsCache;
+        }));
+        return false;
+      }
+    }));
+  },
+  removeCurrentClass: function() {
+    var contextMenu = this.hot.getPlugin('contextMenu');
+    if (!contextMenu.enabled) {
+      return;
+    }
+    if (contextMenu.menu.isOpened()) {
+      var element = contextMenu.menu.hotMenu.rootElement.querySelector('td.current');
+      if (element) {
+        removeClass(element, 'current');
+      }
+    }
+    this.outsideClickDeselectsCache = this.hot.getSettings().outsideClickDeselects;
+    this.hot.getSettings().outsideClickDeselects = false;
+  },
+  removeZeroClipboardClass: function() {
+    var contextMenu = this.hot.getPlugin('contextMenu');
+    if (!contextMenu.enabled) {
+      return;
+    }
+    if (contextMenu.menu.isOpened()) {
+      var element = contextMenu.menu.hotMenu.rootElement.querySelector('td.zeroclipboard-is-hover');
+      if (element) {
+        removeClass(element, 'zeroclipboard-is-hover');
+      }
+    }
+    this.hot.getSettings().outsideClickDeselects = this.outsideClickDeselectsCache;
+  }
+}, {}, BasePlugin);
+;
+registerPlugin('contextMenuCopyPaste', ContextMenuCopyPaste);
+
+//# 
+},{"_base":61,"contextMenu/predefinedItems":74,"eventManager":41,"helpers/array":42,"helpers/dom/element":46,"plugins":60,"zeroclipboard":undefined}],69:[function(_dereq_,module,exports){
 "use strict";
 Object.defineProperties(exports, {
   CommandExecutor: {get: function() {
@@ -14327,7 +14477,7 @@ function findSubCommand(subCommandName, subCommands) {
 ;
 
 //# 
-},{"helpers/array":42}],69:[function(_dereq_,module,exports){
+},{"helpers/array":42}],70:[function(_dereq_,module,exports){
 "use strict";
 Object.defineProperties(exports, {
   ContextMenu: {get: function() {
@@ -14517,7 +14667,7 @@ Handsontable.hooks.register('afterContextMenuExecute');
 registerPlugin('contextMenu', ContextMenu);
 
 //# 
-},{"_base":61,"browser":23,"commandExecutor":68,"eventManager":41,"helpers/array":42,"helpers/dom/element":46,"helpers/dom/event":47,"itemsFactory":71,"menu":72,"plugins":60,"predefinedItems":73}],70:[function(_dereq_,module,exports){
+},{"_base":61,"browser":23,"commandExecutor":69,"eventManager":41,"helpers/array":42,"helpers/dom/element":46,"helpers/dom/event":47,"itemsFactory":72,"menu":73,"plugins":60,"predefinedItems":74}],71:[function(_dereq_,module,exports){
 "use strict";
 Object.defineProperties(exports, {
   Cursor: {get: function() {
@@ -14599,7 +14749,7 @@ Handsontable.plugins.utils = Handsontable.plugins.utils || {};
 Handsontable.plugins.utils.Cursor = Cursor;
 
 //# 
-},{"browser":23,"helpers/dom/element":46,"helpers/dom/event":47}],71:[function(_dereq_,module,exports){
+},{"browser":23,"helpers/dom/element":46,"helpers/dom/event":47}],72:[function(_dereq_,module,exports){
 "use strict";
 Object.defineProperties(exports, {
   ItemsFactory: {get: function() {
@@ -14704,7 +14854,7 @@ function getItems() {
 ;
 
 //# 
-},{"helpers/array":42,"helpers/object":52,"predefinedItems":73}],72:[function(_dereq_,module,exports){
+},{"helpers/array":42,"helpers/object":52,"predefinedItems":74}],73:[function(_dereq_,module,exports){
 "use strict";
 Object.defineProperties(exports, {
   Menu: {get: function() {
@@ -15210,7 +15360,7 @@ mixin(Menu, localHooks);
 ;
 
 //# 
-},{"browser":23,"cursor":70,"eventManager":41,"helpers/array":42,"helpers/dom/element":46,"helpers/dom/event":47,"helpers/function":49,"helpers/object":52,"helpers/unicode":55,"mixins/localHooks":57,"predefinedItems":73,"utils":86}],73:[function(_dereq_,module,exports){
+},{"browser":23,"cursor":71,"eventManager":41,"helpers/array":42,"helpers/dom/element":46,"helpers/dom/event":47,"helpers/function":49,"helpers/object":52,"helpers/unicode":55,"mixins/localHooks":57,"predefinedItems":74,"utils":87}],74:[function(_dereq_,module,exports){
 "use strict";
 var $__13;
 Object.defineProperties(exports, {
@@ -15411,7 +15561,7 @@ function addItem(key, item) {
 }
 
 //# 
-},{"helpers/object":52,"predefinedItems/alignment":74,"predefinedItems/clearColumn":75,"predefinedItems/columnLeft":76,"predefinedItems/columnRight":77,"predefinedItems/readOnly":78,"predefinedItems/redo":79,"predefinedItems/removeColumn":80,"predefinedItems/removeRow":81,"predefinedItems/rowAbove":82,"predefinedItems/rowBelow":83,"predefinedItems/separator":84,"predefinedItems/undo":85}],74:[function(_dereq_,module,exports){
+},{"helpers/object":52,"predefinedItems/alignment":75,"predefinedItems/clearColumn":76,"predefinedItems/columnLeft":77,"predefinedItems/columnRight":78,"predefinedItems/readOnly":79,"predefinedItems/redo":80,"predefinedItems/removeColumn":81,"predefinedItems/removeRow":82,"predefinedItems/rowAbove":83,"predefinedItems/rowBelow":84,"predefinedItems/separator":85,"predefinedItems/undo":86}],75:[function(_dereq_,module,exports){
 "use strict";
 Object.defineProperties(exports, {
   KEY: {get: function() {
@@ -15660,7 +15810,7 @@ function alignmentItem() {
 }
 
 //# 
-},{"separator":84,"utils":86}],75:[function(_dereq_,module,exports){
+},{"separator":85,"utils":87}],76:[function(_dereq_,module,exports){
 "use strict";
 Object.defineProperties(exports, {
   KEY: {get: function() {
@@ -15697,7 +15847,7 @@ function clearColumnItem() {
 }
 
 //# 
-},{"utils":86}],76:[function(_dereq_,module,exports){
+},{"utils":87}],77:[function(_dereq_,module,exports){
 "use strict";
 Object.defineProperties(exports, {
   KEY: {get: function() {
@@ -15738,7 +15888,7 @@ function columnLeftItem() {
 }
 
 //# 
-},{"utils":86}],77:[function(_dereq_,module,exports){
+},{"utils":87}],78:[function(_dereq_,module,exports){
 "use strict";
 Object.defineProperties(exports, {
   KEY: {get: function() {
@@ -15779,7 +15929,7 @@ function columnRightItem() {
 }
 
 //# 
-},{"utils":86}],78:[function(_dereq_,module,exports){
+},{"utils":87}],79:[function(_dereq_,module,exports){
 "use strict";
 Object.defineProperties(exports, {
   KEY: {get: function() {
@@ -15827,7 +15977,7 @@ function readOnlyItem() {
 }
 
 //# 
-},{"utils":86}],79:[function(_dereq_,module,exports){
+},{"utils":87}],80:[function(_dereq_,module,exports){
 "use strict";
 Object.defineProperties(exports, {
   KEY: {get: function() {
@@ -15853,7 +16003,7 @@ function redoItem() {
 }
 
 //# 
-},{}],80:[function(_dereq_,module,exports){
+},{}],81:[function(_dereq_,module,exports){
 "use strict";
 Object.defineProperties(exports, {
   KEY: {get: function() {
@@ -15887,7 +16037,7 @@ function removeColumnItem() {
 }
 
 //# 
-},{"utils":86}],81:[function(_dereq_,module,exports){
+},{"utils":87}],82:[function(_dereq_,module,exports){
 "use strict";
 Object.defineProperties(exports, {
   KEY: {get: function() {
@@ -15921,7 +16071,7 @@ function removeRowItem() {
 }
 
 //# 
-},{"utils":86}],82:[function(_dereq_,module,exports){
+},{"utils":87}],83:[function(_dereq_,module,exports){
 "use strict";
 Object.defineProperties(exports, {
   KEY: {get: function() {
@@ -15953,7 +16103,7 @@ function rowAboveItem() {
 }
 
 //# 
-},{"utils":86}],83:[function(_dereq_,module,exports){
+},{"utils":87}],84:[function(_dereq_,module,exports){
 "use strict";
 Object.defineProperties(exports, {
   KEY: {get: function() {
@@ -15985,7 +16135,7 @@ function rowBelowItem() {
 }
 
 //# 
-},{"utils":86}],84:[function(_dereq_,module,exports){
+},{"utils":87}],85:[function(_dereq_,module,exports){
 "use strict";
 Object.defineProperties(exports, {
   KEY: {get: function() {
@@ -16002,7 +16152,7 @@ function separatorItem() {
 }
 
 //# 
-},{}],85:[function(_dereq_,module,exports){
+},{}],86:[function(_dereq_,module,exports){
 "use strict";
 Object.defineProperties(exports, {
   KEY: {get: function() {
@@ -16028,7 +16178,7 @@ function undoItem() {
 }
 
 //# 
-},{}],86:[function(_dereq_,module,exports){
+},{}],87:[function(_dereq_,module,exports){
 "use strict";
 Object.defineProperties(exports, {
   normalizeSelection: {get: function() {
@@ -16219,153 +16369,7 @@ function filterSeparators(items) {
 }
 
 //# 
-},{"helpers/array":42,"helpers/dom/element":46,"predefinedItems/separator":84}],87:[function(_dereq_,module,exports){
-"use strict";
-Object.defineProperties(exports, {
-  ContextMenuCopyPaste: {get: function() {
-      return ContextMenuCopyPaste;
-    }},
-  __esModule: {value: true}
-});
-var $___46__46__47__95_base__,
-    $__zeroclipboard__,
-    $___46__46__47__46__46__47_helpers_47_dom_47_element__,
-    $___46__46__47__46__46__47_helpers_47_array__,
-    $___46__46__47__46__46__47_eventManager__,
-    $___46__46__47__46__46__47_plugins__,
-    $___46__46__47_contextMenu_47_predefinedItems__;
-var BasePlugin = ($___46__46__47__95_base__ = _dereq_("_base"), $___46__46__47__95_base__ && $___46__46__47__95_base__.__esModule && $___46__46__47__95_base__ || {default: $___46__46__47__95_base__}).default;
-var ZeroClipboard = ($__zeroclipboard__ = _dereq_("zeroclipboard"), $__zeroclipboard__ && $__zeroclipboard__.__esModule && $__zeroclipboard__ || {default: $__zeroclipboard__}).default;
-var removeClass = ($___46__46__47__46__46__47_helpers_47_dom_47_element__ = _dereq_("helpers/dom/element"), $___46__46__47__46__46__47_helpers_47_dom_47_element__ && $___46__46__47__46__46__47_helpers_47_dom_47_element__.__esModule && $___46__46__47__46__46__47_helpers_47_dom_47_element__ || {default: $___46__46__47__46__46__47_helpers_47_dom_47_element__}).removeClass;
-var arrayEach = ($___46__46__47__46__46__47_helpers_47_array__ = _dereq_("helpers/array"), $___46__46__47__46__46__47_helpers_47_array__ && $___46__46__47__46__46__47_helpers_47_array__.__esModule && $___46__46__47__46__46__47_helpers_47_array__ || {default: $___46__46__47__46__46__47_helpers_47_array__}).arrayEach;
-var EventManager = ($___46__46__47__46__46__47_eventManager__ = _dereq_("eventManager"), $___46__46__47__46__46__47_eventManager__ && $___46__46__47__46__46__47_eventManager__.__esModule && $___46__46__47__46__46__47_eventManager__ || {default: $___46__46__47__46__46__47_eventManager__}).EventManager;
-var registerPlugin = ($___46__46__47__46__46__47_plugins__ = _dereq_("plugins"), $___46__46__47__46__46__47_plugins__ && $___46__46__47__46__46__47_plugins__.__esModule && $___46__46__47__46__46__47_plugins__ || {default: $___46__46__47__46__46__47_plugins__}).registerPlugin;
-var SEPARATOR = ($___46__46__47_contextMenu_47_predefinedItems__ = _dereq_("contextMenu/predefinedItems"), $___46__46__47_contextMenu_47_predefinedItems__ && $___46__46__47_contextMenu_47_predefinedItems__.__esModule && $___46__46__47_contextMenu_47_predefinedItems__ || {default: $___46__46__47_contextMenu_47_predefinedItems__}).SEPARATOR;
-var ContextMenuCopyPaste = function ContextMenuCopyPaste(hotInstance) {
-  $traceurRuntime.superConstructor($ContextMenuCopyPaste).call(this, hotInstance);
-  this.eventManager = new EventManager(this);
-  this.swfPath = null;
-  this.outsideClickDeselectsCache = null;
-};
-var $ContextMenuCopyPaste = ContextMenuCopyPaste;
-($traceurRuntime.createClass)(ContextMenuCopyPaste, {
-  isEnabled: function() {
-    return this.hot.getSettings().contextMenuCopyPaste;
-  },
-  enablePlugin: function() {
-    var $__7 = this;
-    if (this.enabled) {
-      return;
-    }
-    if (typeof this.hot.getSettings().contextMenuCopyPaste === 'object') {
-      this.swfPath = this.hot.getSettings().contextMenuCopyPaste.swfPath;
-    }
-    if (typeof ZeroClipboard === 'undefined') {
-      console.error('To be able to use the Copy/Paste feature from the context menu, you need to manually include ZeroClipboard.js file to your website.');
-    }
-    try {
-      new ActiveXObject('ShockwaveFlash.ShockwaveFlash');
-    } catch (exception) {
-      if (typeof navigator.mimeTypes['application/x-shockwave-flash'] == 'undefined') {
-        console.error('To be able to use the Copy/Paste feature from the context menu, your browser needs to have Flash Plugin installed.');
-      }
-    }
-    if (this.swfPath) {
-      ZeroClipboard.config({swfPath: this.swfPath});
-    }
-    this.hot.addHook('afterContextMenuShow', (function() {
-      return $__7.onAfterContextMenuShow();
-    }));
-    this.hot.addHook('afterContextMenuDefaultOptions', (function(options) {
-      return $__7.onAfterContextMenuDefaultOptions(options);
-    }));
-    this.registerEvents();
-    $traceurRuntime.superGet(this, $ContextMenuCopyPaste.prototype, "enablePlugin").call(this);
-  },
-  disablePlugin: function() {
-    $traceurRuntime.superGet(this, $ContextMenuCopyPaste.prototype, "disablePlugin").call(this);
-  },
-  registerEvents: function() {
-    var $__7 = this;
-    this.eventManager.addEventListener(document, 'mouseenter', (function() {
-      return $__7.removeCurrentClass();
-    }));
-    this.eventManager.addEventListener(document, 'mouseleave', (function() {
-      return $__7.removeZeroClipboardClass();
-    }));
-  },
-  getCopyValue: function() {
-    this.hot.copyPaste.setCopyableText();
-    return this.hot.copyPaste.copyPasteInstance.elTextarea.value;
-  },
-  onAfterContextMenuDefaultOptions: function(defaultOptions) {
-    defaultOptions.items.unshift({
-      key: 'copy',
-      name: 'Copy',
-      disabled: function() {
-        return this.selection.selectedHeader.corner;
-      }
-    }, {
-      key: 'paste',
-      name: 'Paste',
-      callback: function() {
-        this.copyPaste.triggerPaste();
-      },
-      disabled: function() {
-        return this.selection.selectedHeader.corner;
-      }
-    }, {name: SEPARATOR});
-  },
-  onAfterContextMenuShow: function() {
-    var $__7 = this;
-    var contextMenu = this.hot.getPlugin('contextMenu');
-    var data = contextMenu.menu.hotMenu.getSourceData();
-    arrayEach(data, (function(item, index) {
-      if (item.key === 'copy') {
-        var zeroClipboardInstance = new ZeroClipboard(contextMenu.menu.hotMenu.getCell(index, 0));
-        zeroClipboardInstance.off();
-        zeroClipboardInstance.on('copy', (function(event) {
-          var clipboard = event.clipboardData;
-          clipboard.setData('text/plain', $__7.getCopyValue());
-          $__7.hot.getSettings().outsideClickDeselects = $__7.outsideClickDeselectsCache;
-        }));
-        return false;
-      }
-    }));
-  },
-  removeCurrentClass: function() {
-    var contextMenu = this.hot.getPlugin('contextMenu');
-    if (!contextMenu.enabled) {
-      return;
-    }
-    if (contextMenu.menu.isOpened()) {
-      var element = contextMenu.menu.hotMenu.rootElement.querySelector('td.current');
-      if (element) {
-        removeClass(element, 'current');
-      }
-    }
-    this.outsideClickDeselectsCache = this.hot.getSettings().outsideClickDeselects;
-    this.hot.getSettings().outsideClickDeselects = false;
-  },
-  removeZeroClipboardClass: function() {
-    var contextMenu = this.hot.getPlugin('contextMenu');
-    if (!contextMenu.enabled) {
-      return;
-    }
-    if (contextMenu.menu.isOpened()) {
-      var element = contextMenu.menu.hotMenu.rootElement.querySelector('td.zeroclipboard-is-hover');
-      if (element) {
-        removeClass(element, 'zeroclipboard-is-hover');
-      }
-    }
-    this.hot.getSettings().outsideClickDeselects = this.outsideClickDeselectsCache;
-  }
-}, {}, BasePlugin);
-;
-registerPlugin('contextMenuCopyPaste', ContextMenuCopyPaste);
-
-//# 
-},{"_base":61,"contextMenu/predefinedItems":73,"eventManager":41,"helpers/array":42,"helpers/dom/element":46,"plugins":60,"zeroclipboard":undefined}],88:[function(_dereq_,module,exports){
+},{"helpers/array":42,"helpers/dom/element":46,"predefinedItems/separator":85}],88:[function(_dereq_,module,exports){
 "use strict";
 Object.defineProperties(exports, {
   CopyPastePlugin: {get: function() {
@@ -24702,5 +24706,5 @@ if (typeof exports !== "undefined") {
     exports.Error = jsonpatch.Error;
 }
 
-},{}]},{},[23,62,64,63,65,108,109,110,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,97,98,99,100,101,103,104,105,106,107,111,112,113,114,129,130,131,132,117,118,119,120,121,122,31,35,32,33,40,34,36,37,38,39])(23)
+},{}]},{},[23,62,64,63,65,108,109,110,66,67,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,68,88,89,90,91,92,93,94,95,97,98,99,100,101,103,104,105,106,107,111,112,113,114,129,130,131,132,117,118,119,120,121,122,31,35,32,33,40,34,36,37,38,39])(23)
 });
